@@ -1,0 +1,67 @@
+name: imou-gateway
+
+services:
+  imou-gateway:
+    image: python:3.12-slim
+
+    container_name: imou-gateway-v2
+
+    hostname: imou-gateway-v2
+
+    working_dir: /app
+
+    command:
+      - sh
+      - -c
+      - |
+        pip install --no-cache-dir -r requirements.txt && \
+        python app.py
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - /DATA/AppData/imou-gateway-v2.0.0:/app
+
+    environment:
+      TZ: Asia/Ho_Chi_Minh
+      PYTHONUNBUFFERED: "1"
+
+    restart: unless-stopped
+
+    network_mode: bridge
+
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    labels:
+      icon: https://icon.casaos.io/main/all/python.png
+
+x-casaos:
+  author: Sinh
+  category: Security
+  hostname: ""
+  icon: https://icon.casaos.io/main/all/python.png
+  index: /
+  is_uncontrolled: false
+  port_map: "5000"
+  scheme: http
+  store_app_id: imou-gateway
+  title:
+    custom: Imou Gateway v2
+    en_us: Imou Gateway v2

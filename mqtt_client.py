@@ -102,10 +102,40 @@ class MQTTManager:
         """Handle MQTT disconnection"""
         self.connected = False
         
+        # Decode reason code to human-readable message
+        reason_msgs = {
+            0: "Normal disconnect",
+            1: "Incorrect protocol version",
+            2: "Invalid client identifier",
+            3: "Server unavailable",
+            4: "Bad username or password",
+            5: "Not authorized",
+            6: "Server unavailable (other)",
+            7: "Connection refused",
+            16: "No matching subscribers",
+            17: "No subscription existed",
+            128: "Unacceptable topic filter",
+            129: "Packet identifier in use",
+            130: "Maximum QoS exceeded",
+            131: "Retain not supported",
+            132: "QoS not supported",
+            133: "Use other server",
+            134: "Server moved",
+            135: "Connection rate exceeded",
+            136: "Maximum connect time",
+            137: "Subscription identifiers not supported",
+            138: "Wildcard subscriptions not supported"
+        }
+        
+        reason_msg = reason_msgs.get(reason_code, f"Unknown ({reason_code})")
+        
         if reason_code == 0:
             logger.info("MQTT Disconnected normally")
         else:
-            logger.warning(f"MQTT Disconnected with code {reason_code}, will attempt reconnect")
+            logger.warning(f"MQTT Disconnected: {reason_msg}, will attempt reconnect")
+            # Only log this once to avoid log spam
+            if not hasattr(self, '_last_disconnect_reason') or self._last_disconnect_reason != reason_code:
+                self._last_disconnect_reason = reason_code
 
     def on_message(self, client, userdata, msg):
         """Handle incoming MQTT messages"""
@@ -116,17 +146,23 @@ class MQTTManager:
         logger.debug(f"MQTT subscription acknowledged: {mid}")
 
     def publish(self, topic, payload):
-        """Publish message to MQTT topic"""
+        """Publish message to MQTT topic with UTF-8 encoding"""
         if not self.connected:
             logger.warning(f"MQTT not connected, message not published: {topic}")
             return False
 
         if isinstance(payload, dict):
+            # Ensure UTF-8 encoding for Vietnamese and other characters
             payload = json.dumps(
                 payload,
-                ensure_ascii=False
+                ensure_ascii=False,
+                default=str
             )
-
+        
+        # Ensure payload is string and UTF-8 encoded
+        if isinstance(payload, str):
+            payload = payload.encode('utf-8')
+        
         try:
             result = self.client.publish(
                 topic,
@@ -146,12 +182,28 @@ class MQTTManager:
             return False
 
     def publish_event(self, event):
-        """Publish event to MQTT"""
+        """Publish event to MQTT with categorized topics"""
         root = config.get("mqtt.topic_root")
-        return self.publish(
-            f"{root}/event",
-            event
-        )
+        
+        # Publish to generic event topic
+        self.publish(f"{root}/event", event)
+        
+        # Publish to event type specific topic
+        # Parser returns 'type' key, not 'event_type'
+        event_type = event.get("type") or event.get("event_type") or "unknown"
+        channel = event.get("channel", "0")
+        
+        # Topic: imou/events/{event_type}
+        self.publish(f"{root}/events/{event_type}", event)
+        
+        # Topic: imou/camera/{channel}/{event_type}
+        self.publish(f"{root}/camera/{channel}/{event_type}", event)
+        
+        # Motion detection - publish to motion-specific topic
+        if event_type == "motion":
+            self.publish_motion_timeout(channel)
+        
+        return True
 
     def publish_raw(self, raw):
         """Publish raw webhook data to MQTT"""

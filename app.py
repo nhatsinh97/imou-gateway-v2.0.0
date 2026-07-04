@@ -82,8 +82,12 @@ def stats():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/webhook', methods=['POST'])
+@app.route('/imou', methods=['POST'])
 def webhook():
-    """Receive webhook events from Imou cameras"""
+    """Receive webhook events from Imou cameras
+    
+    Supports both /webhook and /imou endpoints for compatibility
+    """
     try:
         data = request.get_json()
         logger.info(f"Webhook received: {data}")
