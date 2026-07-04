@@ -241,6 +241,12 @@ docker-compose up -d
 
 See LICENSE file.
 
+## github update
+git status
+git add .
+git commit -m "feat: mô tả thay đổi"
+git push origin main
+
 ## Contributed By
 
 Copilot - GitHub AI Assistant
