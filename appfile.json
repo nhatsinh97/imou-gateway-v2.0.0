@@ -1,0 +1,99 @@
+{
+  "version": "0.4.6",
+  "type": "service",
+  "name": "Imou Gateway",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3050/3050159.png",
+  "description": "Imou Camera Gateway - Bridge between Imou cameras and MQTT",
+  "large_description": "Imou Gateway v2.0.0 is a service that acts as a bridge between Imou IP cameras and MQTT brokers. It receives webhook events from Imou cameras, processes them, stores them in a database, and publishes them to MQTT topics.",
+  "author": "Your Organization",
+  "source": "https://github.com/your-org/imou-gateway",
+  "website": "https://www.imoulife.com",
+  "installation": "https://github.com/your-org/imou-gateway",
+  "donation": "",
+  "category_main": "Media",
+  "category_sub": "Surveillance",
+  "hostname": "",
+  "protocol": "http",
+  "port_map": "5000",
+  "volumes": [
+    {
+      "source": "/DATA/AppData/imou-gateway/database",
+      "destination": "/app/database",
+      "mode": "rw"
+    },
+    {
+      "source": "/DATA/AppData/imou-gateway/images",
+      "destination": "/app/images",
+      "mode": "rw"
+    },
+    {
+      "source": "/DATA/AppData/imou-gateway/logs",
+      "destination": "/app/logs",
+      "mode": "rw"
+    }
+  ],
+  "ports": [
+    {
+      "container": 5000,
+      "host": 5000,
+      "protocol": "tcp",
+      "name": "Web UI"
+    }
+  ],
+  "envs": [
+    {
+      "name": "MQTT_HOST",
+      "description": "MQTT Broker Host",
+      "default": "192.168.1.21"
+    },
+    {
+      "name": "MQTT_PORT",
+      "description": "MQTT Broker Port",
+      "default": "1883"
+    },
+    {
+      "name": "MQTT_USERNAME",
+      "description": "MQTT Username (leave empty if no auth)",
+      "default": ""
+    },
+    {
+      "name": "MQTT_PASSWORD",
+      "description": "MQTT Password (leave empty if no auth)",
+      "default": ""
+    },
+    {
+      "name": "MQTT_TOPIC_ROOT",
+      "description": "MQTT Topic Root",
+      "default": "imou"
+    },
+    {
+      "name": "GATEWAY_LOG_LEVEL",
+      "description": "Log Level (DEBUG, INFO, WARNING, ERROR)",
+      "default": "INFO"
+    },
+    {
+      "name": "GATEWAY_MOTION_TIMEOUT",
+      "description": "Motion Detection Timeout (seconds)",
+      "default": "30"
+    },
+    {
+      "name": "DATABASE_PATH",
+      "description": "Database Path",
+      "default": "/app/database/events.db"
+    },
+    {
+      "name": "IMAGES_PATH",
+      "description": "Images Storage Path",
+      "default": "/app/images"
+    },
+    {
+      "name": "PYTHONUNBUFFERED",
+      "description": "Python Unbuffered Output",
+      "default": "1"
+    }
+  ],
+  "label": "imou-gateway",
+  "index": "/",
+  "support": "",
+  "tagline": "MQTT bridge for Imou cameras"
+}

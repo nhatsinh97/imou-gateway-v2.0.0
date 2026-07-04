@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  imou-gateway:
+    build: .
+    container_name: imou-gateway-v2
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - MQTT_HOST=${MQTT_HOST:-192.168.1.21}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_TOPIC_ROOT=${MQTT_TOPIC_ROOT:-imou}
+      - GATEWAY_LOG_LEVEL=${GATEWAY_LOG_LEVEL:-INFO}
+      - GATEWAY_MOTION_TIMEOUT=${GATEWAY_MOTION_TIMEOUT:-30}
+      - DATABASE_PATH=${DATABASE_PATH:-/app/database/events.db}
+      - IMAGES_PATH=${IMAGES_PATH:-/app/images}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./database:/app/database
+      - ./images:/app/images
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - imou-network
+
+  # Optional: Add MQTT broker for testing
+  # mosquitto:
+  #   image: eclipse-mosquitto:2
+  #   container_name: mosquitto
+  #   ports:
+  #     - "1883:1883"
+  #     - "9001:9001"
+  #   volumes:
+  #     - ./mosquitto/config:/mosquitto/config
+  #     - ./mosquitto/data:/mosquitto/data
+  #     - ./mosquitto/log:/mosquitto/log
+  #   restart: unless-stopped
+  #   networks:
+  #     - imou-network
+
+networks:
+  imou-network:
+    driver: bridge

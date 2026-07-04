@@ -1,0 +1,20 @@
+{
+    "mqtt": {
+        "host": "192.168.1.21",
+        "port": 1883,
+        "username": "",
+        "password": "",
+        "topic_root": "imou"
+    },
+    "gateway": {
+        "motion_timeout": 30,
+        "download_images": false,
+        "log_level": "INFO"
+    },
+    "database": {
+        "path": "database/events.db"
+    },
+    "images": {
+        "path": "images"
+    }
+}
